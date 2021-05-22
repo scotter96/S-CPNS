@@ -14,7 +14,7 @@
 /[Pp]ackages/
 /[Mm]emoryCaptures/
 
-# ? MY OWN
+# ? MY FOLDERS
 /[Aa]ssets/Animations/
 /[Aa]ssets/Editor Default Resources/
 /[Aa]ssets/ExternalDependencyManager/
@@ -30,6 +30,12 @@
 /[Aa]ssets/Sprites/
 /[Aa]ssets/StreamingAssets/
 /[Aa]ssets/_Misc/
+
+# ? MY EXTENSIONS
+*.meta
+*.json
+*.xml
+*.asset
 
 # Asset meta data should only be ignored when the corresponding asset is also ignored
 !/[Aa]ssets/**/*.meta
