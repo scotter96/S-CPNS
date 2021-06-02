@@ -11,6 +11,8 @@ using Firebase.Database;
 
 public class GameManager : MonoBehaviour
 {
+    static GameManager instance;
+
     [Tooltip("Check if local storage is to be used.")]
     public bool useLocalStorage = true;
 
@@ -28,6 +30,14 @@ public class GameManager : MonoBehaviour
     [Tooltip("Set the previous form for each forms in the scene. To know what form an object is, see the tags started with 'Form-' prefix. Format: <Current Form>,<Previous Form>. For forms that have no previous, don't insert here.")]
     public string[] previousForms;
 
+    Dictionary<string,string> context;
+    // * context keys:
+    // * "currentActivity",
+    // * "currentQuizType",
+    // * "currentSpeedQuizType",
+    // * "currentSpeedQuizTimeType",
+    // * "currentSpeedQuizTime",
+
     // * Active User
     [System.Serializable]
     public class User
@@ -38,7 +48,14 @@ public class GameManager : MonoBehaviour
     }
     public User user;
 
-    static GameManager instance;
+    [System.Serializable]
+    public class NotificationPrefab
+    {
+        public GameObject greenColor;
+        public GameObject yellowColor;
+        public GameObject redColor;
+    }
+    public NotificationPrefab notificationPrefab;
 
     void Awake()
     {
@@ -84,12 +101,17 @@ public class GameManager : MonoBehaviour
         // ********** INPUT HANDLER **********
         if (Input.GetKeyDown(KeyCode.Escape))
         {
-            if (activePanelName != "")
-                ManagePanel();
-            else
-                GoBack();
+            BackHandler();
         }
         // ********** END OF INPUT HANDLER **********
+    }
+
+    public void BackHandler()
+    {
+        if (activePanelName != "")
+            ManagePanel();
+        else
+            GoBack();
     }
 
     void GoBack()
@@ -157,6 +179,94 @@ public class GameManager : MonoBehaviour
         SceneManager.LoadScene(name);
     }
 
+    public string GetCurrentPanelName()
+    {
+        return activePanelName;
+    }
+
+    public string GetCurrentFormName()
+    {
+        return activeFormName;
+    }
+
+    public void ExitApp()
+    {
+        if (useLocalStorage)
+            SaveToLocal();
+        Application.Quit();
+    }
+
+    public void ManagePanel(GameObject panelObj = null)
+    {
+        GameObject[] allPanels = GameObject.FindGameObjectsWithTag("Panel");
+        foreach (GameObject panel in allPanels)
+        {
+            panel.SetActive(false);
+        }
+        activePanelName = "";
+
+        if (panelObj != null)
+        {
+            panelObj.SetActive(true);
+            activePanelName = panelObj.name;
+        }
+    }
+
+    public void ShowNotification(int level, string message)
+    // ? Levels: 0 - Normal (green), 1 - Warning (yellow), 2 - Critical (red)
+    {
+        GameObject prefab = notificationPrefab.greenColor;
+        if (level == 1)
+            prefab = notificationPrefab.yellowColor;
+        else if (level == 2)
+            prefab = notificationPrefab.redColor;
+        GameObject notificationObj = Instantiate(prefab,transform.position,Quaternion.identity) as GameObject;
+        RectTransform mainForm = GameObject.FindWithTag("Form-Main").transform as RectTransform;
+        notificationObj.transform.SetParent(mainForm);
+        notificationObj.GetComponent<Descriptor>().ChangeDescription(message);
+        notificationObj.GetComponent<Notifier>().StartNotify();
+    }
+
+    // * Load a Sprite from Resources (e.g. Assets/Resources/Products/Cashew)
+    public static Sprite GetSprite(string filename)
+    {
+        return Resources.Load<Sprite>($"Products/{filename}");
+    }
+
+    // ***********************************************************************
+    // *   CONTEXT CODES (Used for interscene data exchange)
+    // ***********************************************************************
+
+    public string GetContext(string key)
+    {
+        string value = "";
+        bool valueExists = context.TryGetValue(key, out value);
+        return value;
+    }
+
+    public void AddOrUpdateContext(string contextValue)
+    {
+        string[] contextValues = contextValue.Split(':');
+        string key = contextValues[0];
+        string value = contextValues[1];
+        if (context.ContainsKey(key))
+            context[key] = value;
+        else
+            context.Add(key, value);
+    }
+
+    public void DeleteContext(string key="")
+    {
+        if (key != "")
+            context.Remove(key);
+        else
+            context.Clear();
+    }
+
+    // ***********************************************************************
+    // *    USER & DATA CODES
+    // ***********************************************************************
+
     public bool CreateUser(string email, string username, string password)
     {
         bool write = false;
@@ -190,35 +300,6 @@ public class GameManager : MonoBehaviour
     public void LogoutSuccess()
     {
         ResetSave();
-    }
-
-    public void ExitApp()
-    {
-        if (useLocalStorage)
-            SaveToLocal();
-        Application.Quit();
-    }
-
-    public void ManagePanel(GameObject panelObj = null)
-    {
-        GameObject[] allPanels = GameObject.FindGameObjectsWithTag("Panel");
-        foreach (GameObject panel in allPanels)
-        {
-            panel.SetActive(false);
-        }
-        activePanelName = "";
-
-        if (panelObj != null)
-        {
-            panelObj.SetActive(true);
-            activePanelName = panelObj.name;
-        }
-    }
-
-    // * Load a Sprite from Resources (e.g. Assets/Resources/Products/Cashew)
-    public static Sprite GetSprite(string filename)
-    {
-        return Resources.Load<Sprite>($"Products/{filename}");
     }
 
     // **************** FIREBASE REALTIME DATABASE CODES ****************

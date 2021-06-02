@@ -8,8 +8,7 @@ public class Login : MonoBehaviour
 {
     public string WEB_CLIENT_ID = "<your client id here>";
 
-    private GoogleSignInConfiguration configuration;
-
+    GoogleSignInConfiguration configuration;
     GameManager gameManager;
 
     [System.Serializable]
@@ -17,6 +16,9 @@ public class Login : MonoBehaviour
     {
         public InputField usernameField;
         public InputField passwordField;
+        public Image showPasswordImage;
+        public Sprite showPasswordSprite;
+        public Sprite hidePasswordSprite;
     }
     public FormLogin loginForm;
 
@@ -40,17 +42,6 @@ public class Login : MonoBehaviour
     }
     public LoginPanel loginPanels;
 
-    [System.Serializable]
-    public class LoginNotification
-    {
-        public GameObject greenColor;
-        public GameObject yellowColor;
-        public GameObject redColor;
-    }
-    public LoginNotification loginNotifications;
-
-    public Text welcomeText;
-
     // Defer the configuration creation until Awake so the web Client ID
     // Can be set via the property inspector in the Editor.
     void Awake()
@@ -66,11 +57,7 @@ public class Login : MonoBehaviour
     void Update()
     {
         if (gameManager == null)
-            gameManager = GameObject.FindWithTag("Core-GameManager").GetComponent<GameManager>();
-
-        // TODO DEBUG
-        if (Input.GetKeyDown(KeyCode.Space))
-            PostLogin("sabeb");
+            gameManager = GameObject.FindWithTag("GameController").GetComponent<GameManager>();
     }
 
     public void DoOpenScene(string name)
@@ -90,10 +77,14 @@ public class Login : MonoBehaviour
 
     public void ShowPassword(InputField field)
     {
-        if (field.contentType == InputField.ContentType.Password)
+        if (field.contentType == InputField.ContentType.Password) {
             field.contentType = InputField.ContentType.Standard;
-        else if (field.contentType == InputField.ContentType.Standard)
+            loginForm.showPasswordImage.sprite = loginForm.showPasswordSprite;
+        }
+        else if (field.contentType == InputField.ContentType.Standard) {
             field.contentType = InputField.ContentType.Password;
+            loginForm.showPasswordImage.sprite = loginForm.hidePasswordSprite;
+        }
         field.ForceLabelUpdate();
     }
 
@@ -141,10 +132,9 @@ public class Login : MonoBehaviour
             loginForm.passwordField.text
         );
         CloseDialog();
-        gameManager.SwitchForm("Form-Home", false);
-        loginNotifications.greenColor.GetComponent<Descriptor>().ChangeDescription($"Login berhasil. Selamat datang, {user}!");
-        loginNotifications.greenColor.GetComponent<Notifier>().StartNotify();
-        welcomeText.text = $"Selamat datang, {user}!";
+        gameManager.OpenScene("Home");
+        // TODO: Fix notification below to work between scenes:
+        // gameManager.ShowNotification(0,$"Login berhasil. Selamat datang, {user}!");
     }
     // ********** END OF LOGIN CODES **********
 
@@ -207,8 +197,7 @@ public class Login : MonoBehaviour
         ))
         {
             CloseDialog();
-            loginNotifications.greenColor.GetComponent<Descriptor>().ChangeDescription($"Username {registerForm.usernameField.text} berhasil didaftarkan!");
-            loginNotifications.greenColor.GetComponent<Notifier>().StartNotify();
+            gameManager.ShowNotification(0,$"Username {registerForm.usernameField.text} berhasil didaftarkan!");
             DoSwitchForm("Form-Login");
         }
     }
@@ -252,20 +241,17 @@ public class Login : MonoBehaviour
                 {
                     GoogleSignIn.SignInException error =
                             (GoogleSignIn.SignInException)enumerator.Current;
-                    loginNotifications.redColor.GetComponent<Descriptor>().ChangeDescription($"Got Error: {error.Status} {error.Message}");
-                    loginNotifications.redColor.GetComponent<Notifier>().StartNotify();
+                    gameManager.ShowNotification(2,$"Got Error: {error.Status} {error.Message}");
                 }
                 else
                 {
-                    loginNotifications.redColor.GetComponent<Descriptor>().ChangeDescription($"Got Unexpected Exception: {task.Exception}");
-                    loginNotifications.redColor.GetComponent<Notifier>().StartNotify();
+                    gameManager.ShowNotification(2,$"Got Unexpected Exception: {task.Exception}");
                 }
             }
         }
         else if (task.IsCanceled)
         {
-            loginNotifications.yellowColor.GetComponent<Descriptor>().ChangeDescription("Masuk dengan Google dibatalkan.");
-            loginNotifications.yellowColor.GetComponent<Notifier>().StartNotify();
+            gameManager.ShowNotification(1,"Masuk dengan Google dibatalkan.");
         }
         else
         {

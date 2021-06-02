@@ -9,7 +9,6 @@ public class Notifier : MonoBehaviour
 
     public void StartNotify()
     {
-        gameObject.SetActive(true);
         notifAnimator = GetComponent<Animator>();
         notifAnimator.SetTrigger(startTriggerName);
         StartCoroutine(WaitAndCloseNotification());
@@ -21,7 +20,7 @@ public class Notifier : MonoBehaviour
         while (gameObject.activeInHierarchy) {
             yield return new WaitForSeconds(waitTime);
             if (notifAnimator.GetCurrentAnimatorStateInfo(0).IsName("Waiting for Trigger"))
-                gameObject.SetActive(false);
+                Destroy(gameObject);
         }
     }
 }
