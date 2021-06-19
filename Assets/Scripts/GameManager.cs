@@ -30,6 +30,8 @@ public class GameManager : MonoBehaviour
     [Tooltip("Set the previous form for each forms in the scene. To know what form an object is, see the tags started with 'Form-' prefix. Format: <Current Form>,<Previous Form>. For forms that have no previous, don't insert here.")]
     public string[] previousForms;
 
+    public bool isFirstStart;
+
     Dictionary<string,string> context;
     // * context keys:
     // * "currentActivity",
@@ -56,6 +58,8 @@ public class GameManager : MonoBehaviour
         public GameObject redColor;
     }
     public NotificationPrefab notificationPrefab;
+
+    RectTransform notificationStartPos;
 
     void Awake()
     {
@@ -104,6 +108,9 @@ public class GameManager : MonoBehaviour
             BackHandler();
         }
         // ********** END OF INPUT HANDLER **********
+
+        if (notificationStartPos == null)
+            notificationStartPos = GameObject.FindWithTag("Respawn").transform as RectTransform;
     }
 
     public void BackHandler()
@@ -176,7 +183,10 @@ public class GameManager : MonoBehaviour
         ManagePanel();
         activePanelName = "";
         activeFormName = "";
+        Debug.Log("Before loading the scene"); // TODO: Debugging codes, please remove afterwards
         SceneManager.LoadScene(name);
+        Debug.Log("After loading the scene"); // TODO: Debugging codes, please remove afterwards
+        ShowNotification(0,"Yuhu!"); // TODO: Debugging codes, please remove afterwards
     }
 
     public string GetCurrentPanelName()
@@ -220,11 +230,14 @@ public class GameManager : MonoBehaviour
             prefab = notificationPrefab.yellowColor;
         else if (level == 2)
             prefab = notificationPrefab.redColor;
-        GameObject notificationObj = Instantiate(prefab,transform.position,Quaternion.identity) as GameObject;
+        else if (level > 2 || level < 0)
+            Debug.LogWarning($"No notification available on level {level}");
+        GameObject notificationObj = Instantiate(prefab,notificationStartPos.position,Quaternion.identity) as GameObject;
         RectTransform mainForm = GameObject.FindWithTag("Form-Main").transform as RectTransform;
         notificationObj.transform.SetParent(mainForm);
         notificationObj.GetComponent<Descriptor>().ChangeDescription(message);
         notificationObj.GetComponent<Notifier>().StartNotify();
+        Debug.Log(notificationObj + " - " + notificationObj.name); // TODO: Debugging codes, please remove afterwards
     }
 
     // * Load a Sprite from Resources (e.g. Assets/Resources/Products/Cashew)
@@ -377,6 +390,7 @@ public class GameManager : MonoBehaviour
             user.email = data.email;
             user.username = data.username;
             user.password = data.password;
+            isFirstStart = data.isFirstStart;
             // * End of contents to load
         }
         else
@@ -393,6 +407,7 @@ public class GameManager : MonoBehaviour
         data.email = user.email;
         data.username = user.username;
         data.password = user.password;
+        data.isFirstStart = isFirstStart;
         // * End of contents to save
 
         bf.Serialize(file, data);
@@ -416,4 +431,5 @@ class SaveData
     public string email;
     public string username;
     public string password;
+    public bool isFirstStart;
 }

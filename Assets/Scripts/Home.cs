@@ -26,6 +26,7 @@ public class Home : MonoBehaviour
     {
         public GameObject loading;
         public GameObject settings;
+        public GameObject firstStart;
     }
     public HomePanel homePanels;
 
@@ -37,8 +38,11 @@ public class Home : MonoBehaviour
     
     void Update()
     {
-        if (gameManager == null)
+        if (gameManager == null) {
             gameManager = GameObject.FindWithTag("GameController").GetComponent<GameManager>();
+            if (gameManager != null && gameManager.isFirstStart)
+                OpenWelcomeFirstStart();
+        }
 
         // ********** INPUT HANDLER **********
         if (Input.GetKeyDown(KeyCode.Escape))
@@ -89,6 +93,12 @@ public class Home : MonoBehaviour
     public void CloseDialog()
     {
         gameManager.ManagePanel();
+    }
+
+    public void OpenWelcomeFirstStart()
+    {
+        gameManager.ManagePanel(homePanels.firstStart);
+        gameManager.isFirstStart = false;
     }
 
     public void ActionOpenSettings()

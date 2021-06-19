@@ -58,6 +58,10 @@ public class Login : MonoBehaviour
     {
         if (gameManager == null)
             gameManager = GameObject.FindWithTag("GameController").GetComponent<GameManager>();
+
+        // TODO: Debugging codes, please remove afterwards
+        if (Input.GetKeyDown(KeyCode.Space))
+            PostLogin("deby");
     }
 
     public void DoOpenScene(string name)
