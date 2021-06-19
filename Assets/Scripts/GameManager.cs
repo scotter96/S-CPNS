@@ -32,13 +32,16 @@ public class GameManager : MonoBehaviour
 
     public bool isFirstStart;
 
-    Dictionary<string,string> context;
-    // * context keys:
-    // * "currentActivity",
-    // * "currentQuizType",
-    // * "currentSpeedQuizType",
-    // * "currentSpeedQuizTimeType",
-    // * "currentSpeedQuizTime",
+    [System.Serializable]
+    public class Context
+    {
+        public string currentActivity;
+        public string currentQuizType;
+        public string currentSpeedQuizType;
+        public string currentSpeedQuizTimeType;
+        public string currentSpeedQuizTime;
+    }
+    public Context context;
 
     // * Active User
     [System.Serializable]
@@ -250,30 +253,13 @@ public class GameManager : MonoBehaviour
     // *   CONTEXT CODES (Used for interscene data exchange)
     // ***********************************************************************
 
-    public string GetContext(string key)
+    public void FlushContext()
     {
-        string value = "";
-        bool valueExists = context.TryGetValue(key, out value);
-        return value;
-    }
-
-    public void AddOrUpdateContext(string contextValue)
-    {
-        string[] contextValues = contextValue.Split(':');
-        string key = contextValues[0];
-        string value = contextValues[1];
-        if (context.ContainsKey(key))
-            context[key] = value;
-        else
-            context.Add(key, value);
-    }
-
-    public void DeleteContext(string key="")
-    {
-        if (key != "")
-            context.Remove(key);
-        else
-            context.Clear();
+        context.currentActivity = string.Empty;
+        context.currentQuizType = string.Empty;
+        context.currentSpeedQuizType = string.Empty;
+        context.currentSpeedQuizTimeType = string.Empty;
+        context.currentSpeedQuizTime = string.Empty;
     }
 
     // ***********************************************************************
@@ -301,13 +287,20 @@ public class GameManager : MonoBehaviour
         return write;
     }
 
-    public void LoginSuccess(string username, string password)
+    public void LoginSuccess(string username, string password, string email)
     {
         user.username = username;
         user.password = password;
+        user.email = email;
 
         if (useLocalStorage)
             SaveToLocal();
+    }
+
+    public void Logout()
+    {
+        LogoutSuccess();
+        OpenScene("Login");
     }
 
     public void LogoutSuccess()
@@ -363,6 +356,13 @@ public class GameManager : MonoBehaviour
     }
 
     // **************** LOCAL STORAGE CODES ****************
+
+    public void DoSaveToLocal() {
+        if (useLocalStorage)
+            SaveToLocal();
+        else
+            Debug.LogError("This App has not set to use Local Storage!");
+    }
 
     public static string localStorageFilename = "localProfile.fscpns";
     string path = "";

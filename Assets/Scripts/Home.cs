@@ -17,6 +17,8 @@ public class Home : MonoBehaviour
     [System.Serializable]
     public class SettingsWizard
     {
+        public Text username;
+        public Text email;
         public Text version;
     }
     public SettingsWizard settingsWizard;
@@ -34,14 +36,19 @@ public class Home : MonoBehaviour
     {
         ChangeTopbarTitle(Application.productName);
         settingsWizard.version.text = $"version {Application.version}";
+        topBar.backButton.gameObject.SetActive(false);
     }
     
     void Update()
     {
         if (gameManager == null) {
             gameManager = GameObject.FindWithTag("GameController").GetComponent<GameManager>();
-            if (gameManager != null && gameManager.isFirstStart)
-                OpenWelcomeFirstStart();
+            if (gameManager != null) {
+                settingsWizard.username.text = $"{gameManager.user.username}";
+                settingsWizard.email.text = $"{gameManager.user.email}";
+                if (gameManager.isFirstStart)
+                    OpenWelcomeFirstStart();
+            }
         }
 
         // ********** INPUT HANDLER **********
@@ -60,11 +67,8 @@ public class Home : MonoBehaviour
             }
             else {
                 topBar.backButton.gameObject.SetActive(true);
-                string key = "";
                 if (formTag.EndsWith("-Activity"))
-                    key = "currentActivity";
-
-                value = gameManager.GetContext(key);
+                    value = gameManager.context.currentActivity;
             }
             ChangeTopbarTitle(value);
         }
@@ -99,6 +103,7 @@ public class Home : MonoBehaviour
     {
         gameManager.ManagePanel(homePanels.firstStart);
         gameManager.isFirstStart = false;
+        gameManager.DoSaveToLocal();
     }
 
     public void ActionOpenSettings()
@@ -128,28 +133,33 @@ public class Home : MonoBehaviour
         OnFormSwitched(name);
     }
 
+    public void DoLogout()
+    {
+        gameManager.Logout();
+    }
+
     public void UpdateActivity(string value)
     {
-        gameManager.AddOrUpdateContext($"currentActivity:{value}");
+        gameManager.context.currentActivity = value;
     }
 
     public void UpdateQuizType(string value)
     {
-        gameManager.AddOrUpdateContext($"currentQuizType:{value}");
+        gameManager.context.currentQuizType = value;
     }
 
     public void UpdateSpeedQuizType(string value)
     {
-        gameManager.AddOrUpdateContext($"SpeedQuizType:{value}");
+        gameManager.context.currentSpeedQuizType = value;
     }
 
     public void UpdateSpeedQuizTimeType(string value)
     {
-        gameManager.AddOrUpdateContext($"SpeedQuizTimeType:{value}");
+        gameManager.context.currentSpeedQuizTimeType = value;
     }
 
     public void UpdateSpeedQuizTime(string value)
     {
-        gameManager.AddOrUpdateContext($"SpeedQuizTime:{value}");
+        gameManager.context.currentSpeedQuizTime = value;
     }
 }

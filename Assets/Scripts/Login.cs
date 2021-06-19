@@ -56,12 +56,17 @@ public class Login : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (gameManager == null)
+        if (gameManager == null) {
             gameManager = GameObject.FindWithTag("GameController").GetComponent<GameManager>();
+            if (gameManager != null && gameManager.user.username != "" && gameManager.user.password != "") {
+                CloseDialog();
+                gameManager.OpenScene("Home");
+            }
+        }
 
         // TODO: Debugging codes, please remove afterwards
         if (Input.GetKeyDown(KeyCode.Space))
-            PostLogin("deby");
+            PostLogin("user","user@test.com");
     }
 
     public void DoOpenScene(string name)
@@ -96,8 +101,10 @@ public class Login : MonoBehaviour
     public void StartLogin()
     {
         bool loginPassed = false;
-        string user = "";
-        if (loginForm.usernameField.text != "" && loginForm.passwordField.text != "")
+        string username = loginForm.usernameField.text;
+        string password = loginForm.passwordField.text;
+        string email = string.Empty;
+        if (username != "" && password != "")
         {
             gameManager.ManagePanel(loginPanels.loading);
             // ? Check credentials inputted by user
@@ -105,14 +112,14 @@ public class Login : MonoBehaviour
             {
                 GameManager.User userObj = CreateUserFromJSON(userData);
                 // ? If the username & password match a record,
-                if (userObj.username == loginForm.usernameField.text || userObj.email == loginForm.usernameField.text)
+                if (userObj.username == username || userObj.email == username)
                 {
                     string decryptedPassword = gameManager.GetComponent<Encryptor>().Decrypt(userObj.password);
-                    if (decryptedPassword == loginForm.passwordField.text)
+                    if (decryptedPassword == password)
                     {
                         // ? Then passed the login and redirected to main menu
                         loginPassed = true;
-                        user = userObj.username;
+                        email = userObj.email;
                         break;
                     }
                 }
@@ -123,22 +130,23 @@ public class Login : MonoBehaviour
                 gameManager.ManagePanel(loginPanels.wrongLogin);
             }
             else
-                PostLogin(user);
+                PostLogin(username,email);
         }
         else
             gameManager.ManagePanel(loginPanels.nullFields);
     }
 
-    void PostLogin(string user)
+    void PostLogin(string username, string email="")
     {
         gameManager.LoginSuccess(
-            loginForm.usernameField.text,
-            loginForm.passwordField.text
+            username,
+            loginForm.passwordField.text,
+            email
         );
         CloseDialog();
         gameManager.OpenScene("Home");
         // TODO: Fix notification below to work between scenes:
-        // gameManager.ShowNotification(0,$"Login berhasil. Selamat datang, {user}!");
+        // gameManager.ShowNotification(0,$"Login berhasil. Selamat datang, {username}!");
     }
     // ********** END OF LOGIN CODES **********
 
@@ -259,6 +267,7 @@ public class Login : MonoBehaviour
         }
         else
         {
+            // TODO: Also add email as parameter below
             PostLogin(task.Result.DisplayName);
         }
     }
