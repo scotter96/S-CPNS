@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Text;
 using System.Security.Cryptography;
@@ -6,7 +6,7 @@ using UnityEngine;
 
 public class Encryptor : MonoBehaviour
 {
-    public static string ENCRYPTIONKEY = "fir-CPNS";
+    public static string ENCRYPTIONKEY;
     public string Encrypt(string clearText)
     {
         byte[] clearBytes = Encoding.Unicode.GetBytes(clearText);
